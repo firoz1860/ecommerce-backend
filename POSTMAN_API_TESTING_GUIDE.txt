@@ -1,0 +1,2151 @@
+# 🚀 COMPLETE E-COMMERCE API TESTING GUIDE
+# COMPREHENSIVE POSTMAN COLLECTION WITH ALL ENDPOINTS
+
+===============================================================================
+📋 TABLE OF CONTENTS
+===============================================================================
+
+1. ENVIRONMENT SETUP
+2. AUTHENTICATION ENDPOINTS
+3. USER MANAGEMENT ENDPOINTS
+4. PRODUCT MANAGEMENT ENDPOINTS
+5. CATEGORY MANAGEMENT ENDPOINTS
+6. CART MANAGEMENT ENDPOINTS
+7. ORDER MANAGEMENT ENDPOINTS
+8. COUPON MANAGEMENT ENDPOINTS
+9. REVIEW MANAGEMENT ENDPOINTS
+10. SUPPORT TICKET ENDPOINTS
+11. NOTIFICATION ENDPOINTS
+12. WISHLIST ENDPOINTS
+13. ANALYTICS ENDPOINTS
+14. ADMIN MANAGEMENT ENDPOINTS
+15. FILE UPLOAD ENDPOINTS
+16. REAL-TIME TESTING
+17. ERROR TESTING SCENARIOS
+18. COMPLETE USER WORKFLOWS
+19. PERFORMANCE TESTING
+20. SECURITY TESTING
+
+===============================================================================
+🔧 1. ENVIRONMENT SETUP
+===============================================================================
+
+## Postman Environment Variables:
+```
+baseUrl: http://localhost:3000
+accessToken: {{accessToken}}
+refreshToken: {{refreshToken}}
+userId: {{userId}}
+productId: {{productId}}
+categoryId: {{categoryId}}
+orderId: {{orderId}}
+cartId: {{cartId}}
+couponId: {{couponId}}
+reviewId: {{reviewId}}
+supportTicketId: {{supportTicketId}}
+notificationId: {{notificationId}}
+wishlistId: {{wishlistId}}
+```
+
+## Pre-request Script (Global):
+```javascript
+// Auto-set authorization header if token exists
+if (pm.environment.get("accessToken")) {
+    pm.request.headers.add({
+        key: "Authorization",
+        value: "Bearer " + pm.environment.get("accessToken")
+    });
+}
+```
+
+## Test Script (Global):
+```javascript
+// Auto-extract tokens and IDs from responses
+if (pm.response.json().data && pm.response.json().data.accessToken) {
+    pm.environment.set("accessToken", pm.response.json().data.accessToken);
+}
+if (pm.response.json().data && pm.response.json().data.user) {
+    pm.environment.set("userId", pm.response.json().data.user._id);
+}
+if (pm.response.json().data && pm.response.json().data._id) {
+    const endpoint = pm.request.url.path.join('/');
+    if (endpoint.includes('products')) {
+        pm.environment.set("productId", pm.response.json().data._id);
+    } else if (endpoint.includes('categories')) {
+        pm.environment.set("categoryId", pm.response.json().data._id);
+    } else if (endpoint.includes('orders')) {
+        pm.environment.set("orderId", pm.response.json().data._id);
+    }
+}
+```
+
+===============================================================================
+🔐 2. AUTHENTICATION ENDPOINTS
+===============================================================================
+
+## 2.1 Register User
+**POST** {{baseUrl}}/api/auth/register
+```json
+{
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@example.com",
+    "password": "SecurePass123!"
+}
+```
+
+## 2.2 Login User
+**POST** {{baseUrl}}/api/auth/login
+```json
+{
+    "email": "john.doe@example.com",
+    "password": "SecurePass123!"
+}
+```
+
+## 2.3 Refresh Token
+**POST** {{baseUrl}}/api/auth/refresh-token
+```json
+{
+    "refreshToken": "{{refreshToken}}"
+}
+```
+
+## 2.4 Logout User
+**POST** {{baseUrl}}/api/auth/logout
+
+## 2.5 Forgot Password
+**POST** {{baseUrl}}/api/auth/forgot-password
+```json
+{
+    "email": "john.doe@example.com"
+}
+```
+
+## 2.6 Reset Password
+**POST** {{baseUrl}}/api/auth/reset-password
+```json
+{
+    "token": "reset_token_here",
+    "password": "NewSecurePass123!"
+}
+```
+
+## 2.7 Verify Email
+**GET** {{baseUrl}}/api/auth/verify-email?token=verification_token_here
+
+## 2.8 Google OAuth
+**POST** {{baseUrl}}/api/auth/google
+```json
+{
+    "token": "google_oauth_token_here"
+}
+```
+
+===============================================================================
+👤 3. USER MANAGEMENT ENDPOINTS
+===============================================================================
+
+## 3.1 Get User Profile
+**GET** {{baseUrl}}/api/users/profile
+
+## 3.2 Update User Profile
+**PUT** {{baseUrl}}/api/users/profile
+```json
+{
+    "firstName": "John Updated",
+    "lastName": "Doe Updated",
+    "phone": "+1234567890"
+}
+```
+
+## 3.3 Change Password
+**PUT** {{baseUrl}}/api/users/change-password
+```json
+{
+    "currentPassword": "SecurePass123!",
+    "newPassword": "NewSecurePass456!"
+}
+```
+
+## 3.4 Upload Avatar
+**POST** {{baseUrl}}/api/users/avatar
+*Content-Type: multipart/form-data*
+```
+avatar: [file]
+```
+
+## 3.5 Delete Avatar
+**DELETE** {{baseUrl}}/api/users/avatar
+
+## 3.6 Get User Addresses
+**GET** {{baseUrl}}/api/users/addresses
+
+## 3.7 Add Address
+**POST** {{baseUrl}}/api/users/addresses
+```json
+{
+    "type": "home",
+    "street": "123 Main Street",
+    "city": "New York",
+    "state": "NY",
+    "zipCode": "10001",
+    "country": "USA",
+    "isDefault": true
+}
+```
+
+## 3.8 Update Address
+**PUT** {{baseUrl}}/api/users/addresses/{{addressId}}
+```json
+{
+    "street": "456 Updated Street",
+    "city": "Updated City"
+}
+```
+
+## 3.9 Delete Address
+**DELETE** {{baseUrl}}/api/users/addresses/{{addressId}}
+
+## 3.10 Set Default Address
+**PUT** {{baseUrl}}/api/users/addresses/{{addressId}}/default
+
+## 3.11 Get User Orders
+**GET** {{baseUrl}}/api/users/orders?page=1&limit=10&status=delivered
+
+## 3.12 Get User Stats
+**GET** {{baseUrl}}/api/users/stats
+
+## 3.13 Deactivate Account
+**DELETE** {{baseUrl}}/api/users/account
+
+===============================================================================
+📦 4. PRODUCT MANAGEMENT ENDPOINTS
+===============================================================================
+
+## 4.1 Get Products (with filters)
+**GET** {{baseUrl}}/api/products?page=1&limit=20&category={{categoryId}}&minPrice=10&maxPrice=1000&rating=4&brand=Apple&search=phone&sortBy=price&sortOrder=asc&inStock=true
+
+## 4.2 Search Products
+**GET** {{baseUrl}}/api/products/search?q=smartphone&page=1&limit=20
+
+## 4.3 Get Featured Products
+**GET** {{baseUrl}}/api/products/featured
+
+## 4.4 Get Products by Category
+**GET** {{baseUrl}}/api/products/category/{{categoryId}}?page=1&limit=20&includeSubcategories=true
+
+## 4.5 Get Single Product
+**GET** {{baseUrl}}/api/products/{{productId}}
+
+## 4.6 Get Related Products
+**GET** {{baseUrl}}/api/products/{{productId}}/related
+
+## 4.7 Create Product (Admin/Seller)
+**POST** {{baseUrl}}/api/products
+```json
+{
+    "name": "iPhone 15 Pro Max",
+    "description": "Latest iPhone with advanced camera system and A17 Pro chip",
+    "shortDescription": "Premium smartphone with cutting-edge technology",
+    "price": 1199.99,
+    "salePrice": 1099.99,
+    "category": "{{categoryId}}",
+    "brand": "Apple",
+    "sku": "IPHONE15PROMAX001",
+    "stock": 50,
+    "lowStockThreshold": 10,
+    "weight": 0.221,
+    "dimensions": {
+        "length": 15.99,
+        "width": 7.69,
+        "height": 0.83,
+        "unit": "cm"
+    },
+    "tags": ["smartphone", "apple", "ios", "5g", "camera"],
+    "features": [
+        "5G Compatible",
+        "Wireless Charging",
+        "Water Resistant IP68",
+        "Face ID",
+        "A17 Pro Chip"
+    ],
+    "specifications": [
+        {
+            "name": "Display",
+            "value": "6.7-inch Super Retina XDR"
+        },
+        {
+            "name": "Storage",
+            "value": "256GB"
+        },
+        {
+            "name": "Camera",
+            "value": "48MP Main + 12MP Ultra Wide + 12MP Telephoto"
+        }
+    ],
+    "isFeatured": true,
+    "isDigital": false,
+    "shippingRequired": true,
+    "taxable": true,
+    "metaTitle": "iPhone 15 Pro Max - Premium Smartphone",
+    "metaDescription": "Experience the future with iPhone 15 Pro Max featuring A17 Pro chip and advanced camera system"
+}
+```
+
+## 4.8 Update Product
+**PUT** {{baseUrl}}/api/products/{{productId}}
+```json
+{
+    "name": "iPhone 15 Pro Max Updated",
+    "price": 1149.99,
+    "stock": 75,
+    "isFeatured": false
+}
+```
+
+## 4.9 Delete Product (Admin only)
+**DELETE** {{baseUrl}}/api/products/{{productId}}
+
+## 4.10 Upload Product Images
+**POST** {{baseUrl}}/api/products/{{productId}}/images
+*Content-Type: multipart/form-data*
+```
+images: [file1, file2, file3]
+```
+
+## 4.11 Delete Product Image
+**DELETE** {{baseUrl}}/api/products/{{productId}}/images/{{imageId}}
+
+## 4.12 Get Product Reviews
+**GET** {{baseUrl}}/api/products/{{productId}}/reviews?page=1&limit=10&rating=5
+
+## 4.13 Add Product Review
+**POST** {{baseUrl}}/api/products/{{productId}}/reviews
+```json
+{
+    "rating": 5,
+    "comment": "Excellent product! Highly recommended. The camera quality is outstanding and the performance is smooth."
+}
+```
+
+## 4.14 Update Product Review
+**PUT** {{baseUrl}}/api/products/{{productId}}/reviews/{{reviewId}}
+```json
+{
+    "rating": 4,
+    "comment": "Updated review: Good product but battery could be better."
+}
+```
+
+## 4.15 Delete Product Review
+**DELETE** {{baseUrl}}/api/products/{{productId}}/reviews/{{reviewId}}
+
+## 4.16 Mark Review as Helpful
+**POST** {{baseUrl}}/api/products/{{productId}}/reviews/{{reviewId}}/helpful
+
+## 4.17 Update Product Stock
+**PUT** {{baseUrl}}/api/products/{{productId}}/stock
+```json
+{
+    "stock": 100
+}
+```
+
+## 4.18 Get Product Analytics (Seller/Admin)
+**GET** {{baseUrl}}/api/products/{{productId}}/analytics
+
+===============================================================================
+📂 5. CATEGORY MANAGEMENT ENDPOINTS
+===============================================================================
+
+## 5.1 Get All Categories
+**GET** {{baseUrl}}/api/categories?parent=null&level=0&active=true
+
+## 5.2 Get Category Tree
+**GET** {{baseUrl}}/api/categories/tree
+
+## 5.3 Get Single Category
+**GET** {{baseUrl}}/api/categories/{{categoryId}}
+
+## 5.4 Get Category Products
+**GET** {{baseUrl}}/api/categories/{{categoryId}}/products?page=1&limit=20&includeSubcategories=true
+
+## 5.5 Create Category (Admin)
+**POST** {{baseUrl}}/api/categories
+```json
+{
+    "name": "Smartphones",
+    "description": "Latest smartphones and mobile devices",
+    "parent": null,
+    "icon": "smartphone-icon",
+    "sortOrder": 1,
+    "metaTitle": "Smartphones - Latest Mobile Devices",
+    "metaDescription": "Discover the latest smartphones with cutting-edge technology"
+}
+```
+
+## 5.6 Update Category (Admin)
+**PUT** {{baseUrl}}/api/categories/{{categoryId}}
+```json
+{
+    "name": "Smartphones & Tablets",
+    "description": "Mobile devices including smartphones and tablets",
+    "isActive": true,
+    "sortOrder": 2
+}
+```
+
+## 5.7 Delete Category (Admin)
+**DELETE** {{baseUrl}}/api/categories/{{categoryId}}
+
+## 5.8 Upload Category Image (Admin)
+**POST** {{baseUrl}}/api/categories/{{categoryId}}/image
+*Content-Type: multipart/form-data*
+```
+image: [file]
+```
+
+## 5.9 Delete Category Image (Admin)
+**DELETE** {{baseUrl}}/api/categories/{{categoryId}}/image
+
+## 5.10 Reorder Categories (Admin)
+**PUT** {{baseUrl}}/api/categories/reorder
+```json
+{
+    "categories": [
+        {
+            "id": "{{categoryId1}}",
+            "sortOrder": 1
+        },
+        {
+            "id": "{{categoryId2}}",
+            "sortOrder": 2
+        }
+    ]
+}
+```
+
+## 5.11 Get Category Analytics (Admin)
+**GET** {{baseUrl}}/api/categories/{{categoryId}}/analytics
+
+===============================================================================
+🛒 6. CART MANAGEMENT ENDPOINTS
+===============================================================================
+
+## 6.1 Get User Cart
+**GET** {{baseUrl}}/api/cart
+
+## 6.2 Get Cart Summary
+**GET** {{baseUrl}}/api/cart/summary
+
+## 6.3 Validate Cart
+**GET** {{baseUrl}}/api/cart/validate
+
+## 6.4 Add Item to Cart
+**POST** {{baseUrl}}/api/cart/items
+```json
+{
+    "productId": "{{productId}}",
+    "quantity": 2,
+    "variantId": "variant_id_optional"
+}
+```
+
+## 6.5 Update Cart Item
+**PUT** {{baseUrl}}/api/cart/items/{{productId}}
+```json
+{
+    "quantity": 3,
+    "variantId": "variant_id_optional"
+}
+```
+
+## 6.6 Remove Item from Cart
+**DELETE** {{baseUrl}}/api/cart/items/{{productId}}?variantId=variant_id_optional
+
+## 6.7 Clear Cart
+**DELETE** {{baseUrl}}/api/cart/clear
+
+## 6.8 Move Item to Wishlist
+**POST** {{baseUrl}}/api/cart/items/{{productId}}/move-to-wishlist
+
+## 6.9 Save Item for Later
+**POST** {{baseUrl}}/api/cart/items/{{productId}}/save-for-later
+
+## 6.10 Move Saved Item to Cart
+**POST** {{baseUrl}}/api/cart/saved-items/{{productId}}/move-to-cart
+
+## 6.11 Apply Coupon
+**POST** {{baseUrl}}/api/cart/coupon
+```json
+{
+    "couponCode": "SAVE10"
+}
+```
+
+## 6.12 Remove Coupon
+**DELETE** {{baseUrl}}/api/cart/coupon
+
+===============================================================================
+📋 7. ORDER MANAGEMENT ENDPOINTS
+===============================================================================
+
+## 7.1 Create Order
+**POST** {{baseUrl}}/api/orders
+```json
+{
+    "shippingAddress": {
+        "firstName": "John",
+        "lastName": "Doe",
+        "street": "123 Main Street",
+        "city": "New York",
+        "state": "NY",
+        "zipCode": "10001",
+        "country": "USA",
+        "phone": "+1234567890"
+    },
+    "billingAddress": {
+        "firstName": "John",
+        "lastName": "Doe",
+        "street": "123 Main Street",
+        "city": "New York",
+        "state": "NY",
+        "zipCode": "10001",
+        "country": "USA",
+        "phone": "+1234567890"
+    },
+    "paymentMethod": "stripe",
+    "shippingMethod": "standard",
+    "couponCode": "SAVE10",
+    "notes": "Please handle with care"
+}
+```
+
+## 7.2 Get User Orders
+**GET** {{baseUrl}}/api/orders?page=1&limit=10&status=pending&startDate=2024-01-01&endDate=2024-12-31
+
+## 7.3 Get Single Order
+**GET** {{baseUrl}}/api/orders/{{orderId}}
+
+## 7.4 Get Order Timeline
+**GET** {{baseUrl}}/api/orders/{{orderId}}/timeline
+
+## 7.5 Track Order
+**GET** {{baseUrl}}/api/orders/{{orderId}}/track
+
+## 7.6 Get Order Invoice
+**GET** {{baseUrl}}/api/orders/{{orderId}}/invoice
+
+## 7.7 Cancel Order
+**PUT** {{baseUrl}}/api/orders/{{orderId}}/cancel
+```json
+{
+    "reason": "Changed my mind about the purchase"
+}
+```
+
+## 7.8 Request Refund
+**POST** {{baseUrl}}/api/orders/{{orderId}}/refund
+```json
+{
+    "reason": "Product not as described",
+    "amount": 99.99,
+    "items": ["item_id_1", "item_id_2"]
+}
+```
+
+## 7.9 Rate Order
+**POST** {{baseUrl}}/api/orders/{{orderId}}/rate
+```json
+{
+    "rating": 5,
+    "comment": "Excellent service and fast delivery!",
+    "deliveryRating": 5
+}
+```
+
+## 7.10 Reorder Items
+**POST** {{baseUrl}}/api/orders/{{orderId}}/reorder
+
+## 7.11 Update Order Status (Admin)
+**PUT** {{baseUrl}}/api/orders/{{orderId}}/status
+```json
+{
+    "status": "shipped",
+    "note": "Order has been shipped via FedEx",
+    "trackingNumber": "1234567890",
+    "carrier": "FedEx"
+}
+```
+
+## 7.12 Update Shipping Address
+**PUT** {{baseUrl}}/api/orders/{{orderId}}/shipping-address
+```json
+{
+    "street": "456 New Address Street",
+    "city": "Updated City",
+    "state": "CA",
+    "zipCode": "90210"
+}
+```
+
+## 7.13 Add Order Note (Admin)
+**POST** {{baseUrl}}/api/orders/{{orderId}}/notes
+```json
+{
+    "note": "Customer requested expedited shipping",
+    "isInternal": false
+}
+```
+
+## 7.14 Process Payment
+**POST** {{baseUrl}}/api/orders/{{orderId}}/payment
+
+## 7.15 Payment Webhook
+**POST** {{baseUrl}}/api/orders/webhook/payment
+*Headers: stripe-signature: webhook_signature*
+
+===============================================================================
+🎫 8. COUPON MANAGEMENT ENDPOINTS
+===============================================================================
+
+## 8.1 Validate Coupon
+**POST** {{baseUrl}}/api/coupons/validate/SAVE10
+```json
+{
+    "amount": 100.00,
+    "products": ["{{productId}}"],
+    "categories": ["{{categoryId}}"]
+}
+```
+
+## 8.2 Apply Coupon
+**POST** {{baseUrl}}/api/coupons/apply/SAVE10
+```json
+{
+    "orderId": "{{orderId}}"
+}
+```
+
+## 8.3 Get All Coupons (Admin)
+**GET** {{baseUrl}}/api/coupons?page=1&limit=20&status=active&type=percentage&search=SAVE
+
+## 8.4 Get Single Coupon (Admin)
+**GET** {{baseUrl}}/api/coupons/{{couponId}}
+
+## 8.5 Create Coupon (Admin)
+**POST** {{baseUrl}}/api/coupons
+```json
+{
+    "code": "SUMMER2024",
+    "description": "Summer sale - 20% off everything",
+    "type": "percentage",
+    "value": 20,
+    "minAmount": 50,
+    "maxAmount": 100,
+    "maxUses": 1000,
+    "expiresAt": "2024-08-31T23:59:59.999Z",
+    "isActive": true,
+    "applicableCategories": ["{{categoryId}}"],
+    "userRestrictions": {
+        "newUsersOnly": false
+    }
+}
+```
+
+## 8.6 Update Coupon (Admin)
+**PUT** {{baseUrl}}/api/coupons/{{couponId}}
+```json
+{
+    "isActive": false,
+    "maxUses": 500
+}
+```
+
+## 8.7 Delete Coupon (Admin)
+**DELETE** {{baseUrl}}/api/coupons/{{couponId}}
+
+## 8.8 Get Coupon Statistics (Admin)
+**GET** {{baseUrl}}/api/coupons/{{couponId}}/stats
+
+===============================================================================
+⭐ 9. REVIEW MANAGEMENT ENDPOINTS
+===============================================================================
+
+## 9.1 Create Product Review
+**POST** {{baseUrl}}/api/reviews/product/{{productId}}
+```json
+{
+    "rating": 5,
+    "title": "Amazing product!",
+    "comment": "This product exceeded my expectations. The quality is outstanding and delivery was fast.",
+    "pros": ["Great quality", "Fast delivery", "Good value"],
+    "cons": ["Packaging could be better"]
+}
+```
+
+## 9.2 Get Single Review
+**GET** {{baseUrl}}/api/reviews/{{reviewId}}
+
+## 9.3 Update Review
+**PUT** {{baseUrl}}/api/reviews/{{reviewId}}
+```json
+{
+    "rating": 4,
+    "title": "Good product with minor issues",
+    "comment": "Updated my review after using for a month. Still good but found some minor issues.",
+    "pros": ["Good quality", "Decent price"],
+    "cons": ["Minor durability issues", "Could be improved"]
+}
+```
+
+## 9.4 Delete Review
+**DELETE** {{baseUrl}}/api/reviews/{{reviewId}}
+
+## 9.5 Upload Review Images
+**POST** {{baseUrl}}/api/reviews/{{reviewId}}/images
+*Content-Type: multipart/form-data*
+```
+images: [file1, file2, file3]
+```
+
+## 9.6 Mark Review as Helpful
+**POST** {{baseUrl}}/api/reviews/{{reviewId}}/helpful
+```json
+{
+    "helpful": true
+}
+```
+
+## 9.7 Add Reply to Review
+**POST** {{baseUrl}}/api/reviews/{{reviewId}}/reply
+```json
+{
+    "comment": "Thank you for your feedback! We're glad you enjoyed the product."
+}
+```
+
+## 9.8 Flag Review
+**POST** {{baseUrl}}/api/reviews/{{reviewId}}/flag
+```json
+{
+    "reason": "spam",
+    "description": "This review appears to be spam content"
+}
+```
+
+## 9.9 Get All Reviews (Admin)
+**GET** {{baseUrl}}/api/reviews?page=1&limit=20&status=pending&rating=1
+
+## 9.10 Moderate Review (Admin)
+**PUT** {{baseUrl}}/api/reviews/{{reviewId}}/moderate
+```json
+{
+    "status": "approved",
+    "moderationNote": "Review meets community guidelines"
+}
+```
+
+## 9.11 Get Review Statistics (Admin)
+**GET** {{baseUrl}}/api/reviews/stats/overview
+
+===============================================================================
+🎧 10. SUPPORT TICKET ENDPOINTS
+===============================================================================
+
+## 10.1 Create Support Ticket
+**POST** {{baseUrl}}/api/support
+```json
+{
+    "subject": "Issue with my recent order",
+    "description": "I received a damaged product in my recent order #ORD-20241201-0001. The screen has a crack and the packaging was damaged.",
+    "category": "order",
+    "priority": "high",
+    "relatedOrder": "{{orderId}}",
+    "relatedProduct": "{{productId}}"
+}
+```
+
+## 10.2 Get User's Support Tickets
+**GET** {{baseUrl}}/api/support/my-tickets?page=1&limit=10&status=open&category=order
+
+## 10.3 Get Support Ticket Details
+**GET** {{baseUrl}}/api/support/{{supportTicketId}}
+
+## 10.4 Add Message to Support Ticket
+**POST** {{baseUrl}}/api/support/{{supportTicketId}}/messages
+*Content-Type: multipart/form-data*
+```
+message: "Here are the photos of the damaged product as requested"
+attachments: [file1, file2]
+```
+
+## 10.5 Close Support Ticket
+**PUT** {{baseUrl}}/api/support/{{supportTicketId}}/close
+
+## 10.6 Rate Support Ticket
+**POST** {{baseUrl}}/api/support/{{supportTicketId}}/rate
+```json
+{
+    "rating": 5,
+    "feedback": "Excellent support! The issue was resolved quickly and professionally."
+}
+```
+
+## 10.7 Get All Support Tickets (Admin)
+**GET** {{baseUrl}}/api/support?page=1&limit=20&status=open&priority=high&category=order
+
+## 10.8 Update Support Ticket (Admin)
+**PUT** {{baseUrl}}/api/support/{{supportTicketId}}
+```json
+{
+    "status": "in_progress",
+    "priority": "urgent",
+    "assignedTo": "{{adminUserId}}"
+}
+```
+
+## 10.9 Resolve Support Ticket (Admin)
+**PUT** {{baseUrl}}/api/support/{{supportTicketId}}/resolve
+```json
+{
+    "resolution": "Replacement product has been shipped. Tracking number: 1234567890. Customer will receive it within 2-3 business days."
+}
+```
+
+## 10.10 Escalate Support Ticket (Admin)
+**PUT** {{baseUrl}}/api/support/{{supportTicketId}}/escalate
+```json
+{
+    "reason": "Complex technical issue requiring senior support team review"
+}
+```
+
+## 10.11 Get Support Statistics (Admin)
+**GET** {{baseUrl}}/api/support/stats/overview
+
+===============================================================================
+🔔 11. NOTIFICATION ENDPOINTS
+===============================================================================
+
+## 11.1 Get User Notifications
+**GET** {{baseUrl}}/api/notifications?page=1&limit=20&type=order&isRead=false&priority=high
+
+## 11.2 Get Single Notification
+**GET** {{baseUrl}}/api/notifications/{{notificationId}}
+
+## 11.3 Mark Notification as Read
+**PUT** {{baseUrl}}/api/notifications/{{notificationId}}/read
+
+## 11.4 Mark All Notifications as Read
+**PUT** {{baseUrl}}/api/notifications/mark-all-read
+
+## 11.5 Delete Notification
+**DELETE** {{baseUrl}}/api/notifications/{{notificationId}}
+
+## 11.6 Delete All Notifications
+**DELETE** {{baseUrl}}/api/notifications/delete-all
+
+## 11.7 Get Notification Preferences
+**GET** {{baseUrl}}/api/notifications/preferences
+
+## 11.8 Update Notification Preferences
+**PUT** {{baseUrl}}/api/notifications/preferences
+```json
+{
+    "email": {
+        "orderUpdates": true,
+        "promotions": false,
+        "productUpdates": true,
+        "supportMessages": true
+    },
+    "push": {
+        "orderUpdates": true,
+        "promotions": false,
+        "productUpdates": false,
+        "supportMessages": true
+    },
+    "sms": {
+        "orderUpdates": false,
+        "promotions": false,
+        "productUpdates": false,
+        "supportMessages": false
+    }
+}
+```
+
+## 11.9 Create Notification (Admin)
+**POST** {{baseUrl}}/api/notifications
+```json
+{
+    "user": "{{userId}}",
+    "title": "Order Status Update",
+    "message": "Your order #ORD-20241201-0001 has been shipped",
+    "type": "order",
+    "priority": "medium",
+    "data": {
+        "orderId": "{{orderId}}",
+        "url": "/orders/{{orderId}}",
+        "actionRequired": false
+    }
+}
+```
+
+## 11.10 Send Bulk Notifications (Admin)
+**POST** {{baseUrl}}/api/notifications/bulk-send
+```json
+{
+    "userIds": ["{{userId1}}", "{{userId2}}", "{{userId3}}"],
+    "title": "Special Promotion",
+    "message": "Get 25% off on all electronics this weekend!",
+    "type": "promotion",
+    "priority": "medium",
+    "data": {
+        "url": "/categories/electronics",
+        "actionRequired": false
+    }
+}
+```
+
+## 11.11 Get Notification Statistics (Admin)
+**GET** {{baseUrl}}/api/notifications/stats/overview
+
+===============================================================================
+💝 12. WISHLIST ENDPOINTS
+===============================================================================
+
+## 12.1 Get User's Wishlist
+**GET** {{baseUrl}}/api/wishlist
+
+## 12.2 Update Wishlist Details
+**PUT** {{baseUrl}}/api/wishlist
+```json
+{
+    "name": "My Holiday Wishlist",
+    "description": "Items I want for the holidays",
+    "isPublic": true
+}
+```
+
+## 12.3 Add Item to Wishlist
+**POST** {{baseUrl}}/api/wishlist/items
+```json
+{
+    "productId": "{{productId}}",
+    "variantId": "variant_id_optional",
+    "notes": "Size Large, Blue color preferred"
+}
+```
+
+## 12.4 Remove Item from Wishlist
+**DELETE** {{baseUrl}}/api/wishlist/items/{{productId}}?variantId=variant_id_optional
+
+## 12.5 Move Wishlist Item to Cart
+**POST** {{baseUrl}}/api/wishlist/items/{{productId}}/move-to-cart
+```json
+{
+    "quantity": 2
+}
+```
+
+## 12.6 Clear Entire Wishlist
+**DELETE** {{baseUrl}}/api/wishlist/clear
+
+## 12.7 Generate Shareable Link
+**POST** {{baseUrl}}/api/wishlist/share
+
+## 12.8 Get Shared Wishlist
+**GET** {{baseUrl}}/api/wishlist/shared/{{shareToken}}
+
+===============================================================================
+📊 13. ANALYTICS ENDPOINTS (ADMIN ONLY)
+===============================================================================
+
+## 13.1 Get Sales Analytics
+**GET** {{baseUrl}}/api/analytics/sales?period=month&startDate=2024-01-01&endDate=2024-12-31
+
+## 13.2 Get Product Analytics
+**GET** {{baseUrl}}/api/analytics/products?period=month&category={{categoryId}}&limit=10
+
+## 13.3 Get User Analytics
+**GET** {{baseUrl}}/api/analytics/users?period=month
+
+## 13.4 Get Order Analytics
+**GET** {{baseUrl}}/api/analytics/orders?period=month
+
+## 13.5 Get Revenue Analytics
+**GET** {{baseUrl}}/api/analytics/revenue?period=month&breakdown=category
+
+## 13.6 Get Inventory Analytics
+**GET** {{baseUrl}}/api/analytics/inventory
+
+## 13.7 Get Customer Analytics
+**GET** {{baseUrl}}/api/analytics/customers?period=month
+
+## 13.8 Get Traffic Analytics
+**GET** {{baseUrl}}/api/analytics/traffic?period=month
+
+## 13.9 Get Conversion Analytics
+**GET** {{baseUrl}}/api/analytics/conversion?period=month
+
+## 13.10 Export Analytics Report
+**GET** {{baseUrl}}/api/analytics/export?type=sales&format=csv&period=month
+
+===============================================================================
+⚙️ 14. ADMIN MANAGEMENT ENDPOINTS
+===============================================================================
+
+## 14.1 Get Dashboard Stats
+**GET** {{baseUrl}}/api/admin/dashboard
+
+## 14.2 Get Analytics
+**GET** {{baseUrl}}/api/admin/analytics?period=month&startDate=2024-01-01&endDate=2024-12-31
+
+## 14.3 Get All Users (Admin)
+**GET** {{baseUrl}}/api/admin/users?page=1&limit=20&search=john&role=customer&status=active
+
+## 14.4 Get User Details (Admin)
+**GET** {{baseUrl}}/api/admin/users/{{userId}}
+
+## 14.5 Update User Status (Admin)
+**PUT** {{baseUrl}}/api/admin/users/{{userId}}/status
+```json
+{
+    "isActive": false,
+    "reason": "Suspicious activity detected"
+}
+```
+
+## 14.6 Delete User (Admin)
+**DELETE** {{baseUrl}}/api/admin/users/{{userId}}
+
+## 14.7 Get Products (Admin)
+**GET** {{baseUrl}}/api/admin/products?page=1&limit=20&category={{categoryId}}&status=active&lowStock=true
+
+## 14.8 Bulk Update Products (Admin)
+**PUT** {{baseUrl}}/api/admin/products/bulk-update
+```json
+{
+    "productIds": ["{{productId1}}", "{{productId2}}"],
+    "updates": {
+        "isActive": true,
+        "isFeatured": false
+    }
+}
+```
+
+## 14.9 Bulk Delete Products (Admin)
+**DELETE** {{baseUrl}}/api/admin/products/bulk-delete
+```json
+{
+    "productIds": ["{{productId1}}", "{{productId2}}"]
+}
+```
+
+## 14.10 Import Products (Admin)
+**POST** {{baseUrl}}/api/admin/products/import
+*Content-Type: multipart/form-data*
+```
+file: [CSV file with product data]
+```
+
+## 14.11 Export Products (Admin)
+**GET** {{baseUrl}}/api/admin/products/export
+
+## 14.12 Get Orders (Admin)
+**GET** {{baseUrl}}/api/admin/orders?page=1&limit=20&status=pending&startDate=2024-01-01&endDate=2024-12-31
+
+## 14.13 Get Order Details (Admin)
+**GET** {{baseUrl}}/api/admin/orders/{{orderId}}
+
+## 14.14 Process Refund (Admin)
+**POST** {{baseUrl}}/api/admin/orders/{{orderId}}/refund
+```json
+{
+    "amount": 99.99,
+    "reason": "Product defect confirmed"
+}
+```
+
+## 14.15 Get Categories (Admin)
+**GET** {{baseUrl}}/api/admin/categories
+
+## 14.16 Create Category (Admin)
+**POST** {{baseUrl}}/api/admin/categories
+```json
+{
+    "name": "Gaming Accessories",
+    "description": "Gaming keyboards, mice, and accessories",
+    "parent": "{{categoryId}}",
+    "sortOrder": 5
+}
+```
+
+## 14.17 Update Category (Admin)
+**PUT** {{baseUrl}}/api/admin/categories/{{categoryId}}
+```json
+{
+    "name": "Gaming & Accessories",
+    "isActive": true
+}
+```
+
+## 14.18 Delete Category (Admin)
+**DELETE** {{baseUrl}}/api/admin/categories/{{categoryId}}
+
+## 14.19 Get Sales Report (Admin)
+**GET** {{baseUrl}}/api/admin/reports/sales?period=month&startDate=2024-01-01&endDate=2024-12-31
+
+## 14.20 Get Inventory Report (Admin)
+**GET** {{baseUrl}}/api/admin/reports/inventory
+
+## 14.21 Get User Report (Admin)
+**GET** {{baseUrl}}/api/admin/reports/users
+
+## 14.22 Get System Health (Admin)
+**GET** {{baseUrl}}/api/admin/system/health
+
+## 14.23 Get System Logs (Admin)
+**GET** {{baseUrl}}/api/admin/system/logs?level=error&limit=100
+
+## 14.24 Get Settings (Admin)
+**GET** {{baseUrl}}/api/admin/settings
+
+## 14.25 Update Settings (Admin)
+**PUT** {{baseUrl}}/api/admin/settings
+```json
+{
+    "siteName": "My E-commerce Store",
+    "siteDescription": "Your one-stop shop for everything",
+    "currency": "USD",
+    "taxRate": 0.08,
+    "shippingCost": 9.99,
+    "freeShippingThreshold": 50
+}
+```
+
+## 14.26 Backup Database (Admin)
+**POST** {{baseUrl}}/api/admin/database/backup
+
+## 14.27 Restore Database (Admin)
+**POST** {{baseUrl}}/api/admin/database/restore
+*Content-Type: multipart/form-data*
+```
+backup: [backup file]
+```
+
+## 14.28 Send Bulk Email (Admin)
+**POST** {{baseUrl}}/api/admin/email/bulk-send
+```json
+{
+    "recipients": ["user1@example.com", "user2@example.com"],
+    "subject": "Special Offer - 20% Off Everything!",
+    "template": "promotional",
+    "data": {
+        "offerPercentage": 20,
+        "validUntil": "2024-12-31"
+    }
+}
+```
+
+## 14.29 Get Email Templates (Admin)
+**GET** {{baseUrl}}/api/admin/email/templates
+
+## 14.30 Update Email Template (Admin)
+**PUT** {{baseUrl}}/api/admin/email/templates/welcome
+```json
+{
+    "subject": "Welcome to Our Store!",
+    "content": "<h1>Welcome {{name}}!</h1><p>Thank you for joining our community.</p>"
+}
+```
+
+===============================================================================
+📁 15. FILE UPLOAD ENDPOINTS
+===============================================================================
+
+## 15.1 Upload Product Images
+**POST** {{baseUrl}}/api/products/{{productId}}/images
+*Content-Type: multipart/form-data*
+```
+images: [file1.jpg, file2.jpg, file3.jpg]
+```
+
+## 15.2 Upload User Avatar
+**POST** {{baseUrl}}/api/users/avatar
+*Content-Type: multipart/form-data*
+```
+avatar: [profile-image.jpg]
+```
+
+## 15.3 Upload Category Image
+**POST** {{baseUrl}}/api/categories/{{categoryId}}/image
+*Content-Type: multipart/form-data*
+```
+image: [category-banner.jpg]
+```
+
+## 15.4 Upload Review Images
+**POST** {{baseUrl}}/api/reviews/{{reviewId}}/images
+*Content-Type: multipart/form-data*
+```
+images: [review-image1.jpg, review-image2.jpg]
+```
+
+## 15.5 Upload Support Attachments
+**POST** {{baseUrl}}/api/support/{{supportTicketId}}/messages
+*Content-Type: multipart/form-data*
+```
+message: "Here are the requested documents"
+attachments: [document1.pdf, screenshot.png]
+```
+
+## 15.6 Import Products CSV
+**POST** {{baseUrl}}/api/admin/products/import
+*Content-Type: multipart/form-data*
+```
+file: [products.csv]
+```
+
+**Sample CSV Format:**
+```csv
+name,description,price,category,brand,sku,stock,isActive
+"iPhone 15","Latest iPhone",999.99,"electronics","Apple","IP15001",50,true
+"Samsung Galaxy S24","Android phone",899.99,"electronics","Samsung","SG24001",30,true
+```
+
+===============================================================================
+🔄 16. REAL-TIME TESTING (Socket.io)
+===============================================================================
+
+## 16.1 Socket.io Connection Test
+```javascript
+// Use Socket.io client library or browser console
+const socket = io('http://localhost:3000', {
+    auth: {
+        token: 'your_access_token_here'
+    }
+});
+
+// Listen for connection
+socket.on('connect', () => {
+    console.log('Connected to server');
+});
+
+// Track order updates
+socket.emit('trackOrder', 'order_id_here');
+
+// Listen for order status updates
+socket.on('orderStatusUpdate', (data) => {
+    console.log('Order status updated:', data);
+});
+
+// Join support chat
+socket.emit('joinSupport', {
+    orderId: 'order_id_here',
+    message: 'I need help with my order'
+});
+
+// Send support message
+socket.emit('supportMessage', {
+    orderId: 'order_id_here',
+    message: 'Hello, I have a question about my order'
+});
+
+// Listen for support messages
+socket.on('supportMessage', (data) => {
+    console.log('Support message:', data);
+});
+
+// Subscribe to inventory alerts (Admin only)
+socket.emit('subscribeToInventoryAlerts');
+
+// Listen for inventory alerts
+socket.on('inventoryAlert', (data) => {
+    console.log('Low stock alert:', data);
+});
+
+// Listen for notifications
+socket.on('notification', (data) => {
+    console.log('New notification:', data);
+});
+```
+
+===============================================================================
+❌ 17. ERROR TESTING SCENARIOS
+===============================================================================
+
+## 17.1 Authentication Errors
+
+### Invalid Login Credentials
+**POST** {{baseUrl}}/api/auth/login
+```json
+{
+    "email": "wrong@example.com",
+    "password": "wrongpassword"
+}
+```
+*Expected: 401 Unauthorized*
+
+### Expired Token
+**GET** {{baseUrl}}/api/users/profile
+*Headers: Authorization: Bearer expired_token_here*
+*Expected: 401 Token Expired*
+
+### Missing Authorization Header
+**GET** {{baseUrl}}/api/users/profile
+*No Authorization header*
+*Expected: 401 Access token required*
+
+## 17.2 Validation Errors
+
+### Invalid Email Format
+**POST** {{baseUrl}}/api/auth/register
+```json
+{
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "invalid-email",
+    "password": "password123"
+}
+```
+*Expected: 400 Validation Error*
+
+### Missing Required Fields
+**POST** {{baseUrl}}/api/products
+```json
+{
+    "name": "Product Name"
+    // Missing required fields
+}
+```
+*Expected: 400 Validation Error*
+
+### Invalid MongoDB ObjectId
+**GET** {{baseUrl}}/api/products/invalid-id
+*Expected: 404 Resource not found*
+
+## 17.3 Business Logic Errors
+
+### Add Out of Stock Product to Cart
+**POST** {{baseUrl}}/api/cart/items
+```json
+{
+    "productId": "{{outOfStockProductId}}",
+    "quantity": 1
+}
+```
+*Expected: 400 Product out of stock*
+
+### Exceed Available Stock
+**POST** {{baseUrl}}/api/cart/items
+```json
+{
+    "productId": "{{productId}}",
+    "quantity": 999999
+}
+```
+*Expected: 400 Insufficient stock*
+
+### Cancel Already Shipped Order
+**PUT** {{baseUrl}}/api/orders/{{shippedOrderId}}/cancel
+```json
+{
+    "reason": "Changed mind"
+}
+```
+*Expected: 400 Cannot cancel shipped order*
+
+### Use Invalid Coupon
+**POST** {{baseUrl}}/api/coupons/validate/INVALID
+```json
+{
+    "amount": 100
+}
+```
+*Expected: 404 Invalid or expired coupon*
+
+### Review Product Without Purchase
+**POST** {{baseUrl}}/api/reviews/product/{{productId}}
+```json
+{
+    "rating": 5,
+    "comment": "Great product"
+}
+```
+*Expected: 400 if user hasn't purchased (depending on business rules)*
+
+## 17.4 Permission Errors
+
+### Customer Accessing Admin Endpoint
+**GET** {{baseUrl}}/api/admin/dashboard
+*Headers: Authorization: Bearer customer_token*
+*Expected: 403 Admin access required*
+
+### Update Another User's Profile
+**PUT** {{baseUrl}}/api/users/profile
+*With different user's token*
+*Expected: 403 Access denied*
+
+### Delete Another User's Review
+**DELETE** {{baseUrl}}/api/reviews/{{otherUserReviewId}}
+*Expected: 403 You can only delete your own reviews*
+
+## 17.5 Rate Limiting Errors
+
+### Exceed Rate Limit
+*Make 101 requests within 15 minutes to any API endpoint*
+*Expected: 429 Too Many Requests*
+
+## 17.6 File Upload Errors
+
+### Upload Invalid File Type
+**POST** {{baseUrl}}/api/users/avatar
+*Upload .txt file instead of image*
+*Expected: 400 Only image files allowed*
+
+### Upload File Too Large
+**POST** {{baseUrl}}/api/products/{{productId}}/images
+*Upload file > 10MB*
+*Expected: 400 File too large*
+
+### Upload Without File
+**POST** {{baseUrl}}/api/users/avatar
+*No file attached*
+*Expected: 400 Avatar image is required*
+
+===============================================================================
+🔄 18. COMPLETE USER WORKFLOWS
+===============================================================================
+
+## 18.1 Customer Registration to Purchase Workflow
+
+### Step 1: Register New Customer
+**POST** {{baseUrl}}/api/auth/register
+```json
+{
+    "firstName": "Alice",
+    "lastName": "Johnson",
+    "email": "alice.johnson@example.com",
+    "password": "SecurePass123!"
+}
+```
+
+### Step 2: Update Profile
+**PUT** {{baseUrl}}/api/users/profile
+```json
+{
+    "phone": "+1987654321"
+}
+```
+
+### Step 3: Add Shipping Address
+**POST** {{baseUrl}}/api/users/addresses
+```json
+{
+    "type": "home",
+    "street": "789 Oak Avenue",
+    "city": "Los Angeles",
+    "state": "CA",
+    "zipCode": "90210",
+    "country": "USA",
+    "isDefault": true
+}
+```
+
+### Step 4: Browse Products
+**GET** {{baseUrl}}/api/products?category={{categoryId}}&page=1&limit=20
+
+### Step 5: View Product Details
+**GET** {{baseUrl}}/api/products/{{productId}}
+
+### Step 6: Add Product to Wishlist
+**POST** {{baseUrl}}/api/wishlist/items
+```json
+{
+    "productId": "{{productId}}",
+    "notes": "Consider for birthday gift"
+}
+```
+
+### Step 7: Add Product to Cart
+**POST** {{baseUrl}}/api/cart/items
+```json
+{
+    "productId": "{{productId}}",
+    "quantity": 2
+}
+```
+
+### Step 8: Add Another Product to Cart
+**POST** {{baseUrl}}/api/cart/items
+```json
+{
+    "productId": "{{productId2}}",
+    "quantity": 1
+}
+```
+
+### Step 9: View Cart
+**GET** {{baseUrl}}/api/cart
+
+### Step 10: Apply Coupon
+**POST** {{baseUrl}}/api/cart/coupon
+```json
+{
+    "couponCode": "SAVE10"
+}
+```
+
+### Step 11: Validate Cart Before Checkout
+**GET** {{baseUrl}}/api/cart/validate
+
+### Step 12: Create Order
+**POST** {{baseUrl}}/api/orders
+```json
+{
+    "shippingAddress": {
+        "firstName": "Alice",
+        "lastName": "Johnson",
+        "street": "789 Oak Avenue",
+        "city": "Los Angeles",
+        "state": "CA",
+        "zipCode": "90210",
+        "country": "USA",
+        "phone": "+1987654321"
+    },
+    "paymentMethod": "stripe",
+    "shippingMethod": "express"
+}
+```
+
+### Step 13: Process Payment
+**POST** {{baseUrl}}/api/orders/{{orderId}}/payment
+
+### Step 14: Track Order
+**GET** {{baseUrl}}/api/orders/{{orderId}}/track
+
+### Step 15: Rate Order (After Delivery)
+**POST** {{baseUrl}}/api/orders/{{orderId}}/rate
+```json
+{
+    "rating": 5,
+    "comment": "Excellent service and fast delivery!",
+    "deliveryRating": 5
+}
+```
+
+### Step 16: Write Product Review
+**POST** {{baseUrl}}/api/reviews/product/{{productId}}
+```json
+{
+    "rating": 5,
+    "title": "Amazing product!",
+    "comment": "This product exceeded my expectations. Highly recommended!",
+    "pros": ["Great quality", "Fast shipping", "Good value"],
+    "cons": []
+}
+```
+
+## 18.2 Customer Support Workflow
+
+### Step 1: Create Support Ticket
+**POST** {{baseUrl}}/api/support
+```json
+{
+    "subject": "Issue with my recent order",
+    "description": "I received a damaged product in my recent order. The screen has a crack.",
+    "category": "order",
+    "priority": "high",
+    "relatedOrder": "{{orderId}}"
+}
+```
+
+### Step 2: Add Message with Attachments
+**POST** {{baseUrl}}/api/support/{{supportTicketId}}/messages
+*Content-Type: multipart/form-data*
+```
+message: "Here are photos of the damaged product"
+attachments: [damage-photo1.jpg, damage-photo2.jpg]
+```
+
+### Step 3: Check Ticket Status
+**GET** {{baseUrl}}/api/support/{{supportTicketId}}
+
+### Step 4: Rate Support (After Resolution)
+**POST** {{baseUrl}}/api/support/{{supportTicketId}}/rate
+```json
+{
+    "rating": 5,
+    "feedback": "Excellent support! Issue was resolved quickly."
+}
+```
+
+## 18.3 Admin Management Workflow
+
+### Step 1: Admin Login
+**POST** {{baseUrl}}/api/auth/login
+```json
+{
+    "email": "admin@example.com",
+    "password": "admin123456"
+}
+```
+
+### Step 2: View Dashboard
+**GET** {{baseUrl}}/api/admin/dashboard
+
+### Step 3: Create Category
+**POST** {{baseUrl}}/api/admin/categories
+```json
+{
+    "name": "Smart Home",
+    "description": "Smart home devices and automation",
+    "sortOrder": 10
+}
+```
+
+### Step 4: Create Coupon
+**POST** {{baseUrl}}/api/coupons
+```json
+{
+    "code": "NEWYEAR2024",
+    "description": "New Year Special - 25% off",
+    "type": "percentage",
+    "value": 25,
+    "minAmount": 100,
+    "maxUses": 500,
+    "expiresAt": "2024-01-31T23:59:59.999Z"
+}
+```
+
+### Step 5: Create Product
+**POST** {{baseUrl}}/api/products
+```json
+{
+    "name": "Smart Thermostat",
+    "description": "WiFi-enabled smart thermostat with app control",
+    "price": 249.99,
+    "category": "{{categoryId}}",
+    "brand": "Nest",
+    "sku": "NEST001",
+    "stock": 25,
+    "isFeatured": true
+}
+```
+
+### Step 6: Upload Product Images
+**POST** {{baseUrl}}/api/products/{{productId}}/images
+*Upload product images*
+
+### Step 7: Monitor Orders
+**GET** {{baseUrl}}/api/admin/orders?status=pending
+
+### Step 8: Update Order Status
+**PUT** {{baseUrl}}/api/orders/{{orderId}}/status
+```json
+{
+    "status": "processing",
+    "note": "Order is being prepared for shipment"
+}
+```
+
+### Step 9: Handle Support Tickets
+**GET** {{baseUrl}}/api/support?status=open&priority=high
+
+### Step 10: Resolve Support Ticket
+**PUT** {{baseUrl}}/api/support/{{supportTicketId}}/resolve
+```json
+{
+    "resolution": "Replacement product shipped. Tracking: 1234567890"
+}
+```
+
+### Step 11: View Analytics
+**GET** {{baseUrl}}/api/analytics/sales?period=month
+
+### Step 12: Moderate Reviews
+**GET** {{baseUrl}}/api/reviews?status=pending
+
+### Step 13: Approve Review
+**PUT** {{baseUrl}}/api/reviews/{{reviewId}}/moderate
+```json
+{
+    "status": "approved",
+    "moderationNote": "Review meets guidelines"
+}
+```
+
+### Step 14: Send Bulk Notifications
+**POST** {{baseUrl}}/api/notifications/bulk-send
+```json
+{
+    "userIds": ["{{userId1}}", "{{userId2}}"],
+    "title": "New Product Launch",
+    "message": "Check out our latest smart home devices!",
+    "type": "product",
+    "priority": "medium"
+}
+```
+
+### Step 15: Generate Reports
+**GET** {{baseUrl}}/api/admin/reports/sales?period=month
+
+===============================================================================
+⚡ 19. PERFORMANCE TESTING
+===============================================================================
+
+## 19.1 Load Testing Scenarios
+
+### Concurrent User Registration
+*Run 100 concurrent registration requests*
+```javascript
+// Postman Runner or Newman
+for (let i = 0; i < 100; i++) {
+    pm.sendRequest({
+        url: '{{baseUrl}}/api/auth/register',
+        method: 'POST',
+        body: {
+            mode: 'raw',
+            raw: JSON.stringify({
+                firstName: `User${i}`,
+                lastName: `Test${i}`,
+                email: `user${i}@example.com`,
+                password: 'password123'
+            })
+        }
+    });
+}
+```
+
+### Product Search Performance
+*Test search with various query lengths and filters*
+**GET** {{baseUrl}}/api/products/search?q=smartphone&page=1&limit=50
+
+### Cart Operations Under Load
+*Simulate multiple users adding items to cart simultaneously*
+
+### Order Creation Stress Test
+*Test order creation with high concurrency*
+
+### Notification System Load Test
+*Test bulk notification sending*
+
+## 19.2 Caching Verification
+
+### Test Cache Hit/Miss
+1. **GET** {{baseUrl}}/api/products (First request - cache miss)
+2. **GET** {{baseUrl}}/api/products (Second request - cache hit)
+3. Verify response times difference
+
+### Cache Invalidation Test
+1. **GET** {{baseUrl}}/api/products/{{productId}} (Cache product)
+2. **PUT** {{baseUrl}}/api/products/{{productId}} (Update product)
+3. **GET** {{baseUrl}}/api/products/{{productId}} (Verify cache invalidated)
+
+## 19.3 Database Performance
+
+### Pagination Performance
+**GET** {{baseUrl}}/api/products?page=100&limit=20
+*Test performance with large page numbers*
+
+### Complex Query Performance
+**GET** {{baseUrl}}/api/products?category={{categoryId}}&minPrice=100&maxPrice=500&rating=4&brand=Apple&search=phone&sortBy=price&sortOrder=desc
+
+### Aggregation Performance
+**GET** {{baseUrl}}/api/analytics/sales?period=year
+*Test complex aggregation queries*
+
+### Search Performance
+**GET** {{baseUrl}}/api/products/search?q=smartphone+wireless+bluetooth
+*Test full-text search performance*
+
+===============================================================================
+🔒 20. SECURITY TESTING
+===============================================================================
+
+## 20.1 Authentication Security
+
+### SQL Injection Attempts
+**POST** {{baseUrl}}/api/auth/login
+```json
+{
+    "email": "admin@example.com'; DROP TABLE users; --",
+    "password": "password"
+}
+```
+*Expected: Proper sanitization, no SQL injection*
+
+### XSS Attempts
+**POST** {{baseUrl}}/api/reviews/product/{{productId}}
+```json
+{
+    "rating": 5,
+    "comment": "<script>alert('XSS')</script>"
+}
+```
+*Expected: Script tags sanitized*
+
+### CSRF Protection
+*Test requests without proper CSRF tokens*
+
+## 20.2 Authorization Testing
+
+### Horizontal Privilege Escalation
+*Try to access another user's data*
+**GET** {{baseUrl}}/api/users/profile
+*With User A's token trying to access User B's data*
+
+### Vertical Privilege Escalation
+*Customer trying to access admin endpoints*
+**GET** {{baseUrl}}/api/admin/dashboard
+*With customer token*
+
+### Resource Access Control
+**GET** {{baseUrl}}/api/orders/{{otherUserOrderId}}
+*Try to access another user's order*
+
+## 20.3 Input Validation Security
+
+### Buffer Overflow Attempts
+**POST** {{baseUrl}}/api/products
+```json
+{
+    "name": "A".repeat(10000),
+    "description": "Test product"
+}
+```
+*Expected: Proper length validation*
+
+### Invalid Data Types
+**POST** {{baseUrl}}/api/cart/items
+```json
+{
+    "productId": 123,
+    "quantity": "invalid"
+}
+```
+*Expected: Type validation errors*
+
+### NoSQL Injection
+**POST** {{baseUrl}}/api/auth/login
+```json
+{
+    "email": {"$ne": null},
+    "password": {"$ne": null}
+}
+```
+*Expected: Proper input sanitization*
+
+## 20.4 Rate Limiting Security
+
+### Brute Force Protection
+*Attempt multiple failed logins*
+```javascript
+for (let i = 0; i < 10; i++) {
+    // POST login with wrong password
+}
+```
+*Expected: Account lockout after 5 attempts*
+
+### API Rate Limiting
+*Exceed API rate limits*
+```javascript
+for (let i = 0; i < 150; i++) {
+    // GET any endpoint rapidly
+}
+```
+*Expected: 429 Too Many Requests*
+
+## 20.5 File Upload Security
+
+### Malicious File Upload
+**POST** {{baseUrl}}/api/users/avatar
+*Upload .exe or .php file*
+*Expected: File type validation*
+
+### File Size Bomb
+**POST** {{baseUrl}}/api/products/{{productId}}/images
+*Upload extremely large file*
+*Expected: Size limit enforcement*
+
+### Path Traversal
+**POST** {{baseUrl}}/api/users/avatar
+*Upload file with path traversal in filename*
+*Expected: Filename sanitization*
+
+===============================================================================
+📊 21. MONITORING & DEBUGGING
+===============================================================================
+
+## 21.1 Health Check Endpoints
+
+### Application Health
+**GET** {{baseUrl}}/health
+*Expected: 200 OK with uptime info*
+
+### System Health (Admin)
+**GET** {{baseUrl}}/api/admin/system/health
+*Expected: Database, Redis, and service status*
+
+## 21.2 Logging Verification
+
+### Error Logging
+*Trigger errors and verify logs*
+**GET** {{baseUrl}}/api/admin/system/logs?level=error&limit=50
+
+### Access Logging
+*Verify all requests are logged*
+**GET** {{baseUrl}}/api/admin/system/logs?level=info&limit=100
+
+## 21.3 Performance Monitoring
+
+### Response Time Tracking
+```javascript
+// Add to test scripts
+pm.test("Response time is acceptable", function () {
+    pm.expect(pm.response.responseTime).to.be.below(2000);
+});
+```
+
+### Memory Usage Monitoring
+*Monitor application memory usage during load tests*
+
+### Database Query Performance
+*Monitor slow queries and optimization opportunities*
+
+===============================================================================
+🎯 22. TESTING CHECKLIST
+===============================================================================
+
+## Pre-Testing Setup
+- [ ] Environment variables configured
+- [ ] Database seeded with test data
+- [ ] Redis server running
+- [ ] Application server running
+- [ ] Postman collection imported
+- [ ] File upload directories created
+
+## Authentication Testing
+- [ ] User registration works
+- [ ] User login works
+- [ ] Token refresh works
+- [ ] Password reset works
+- [ ] Email verification works
+- [ ] Logout works
+- [ ] Invalid credentials rejected
+- [ ] Account lockout works
+
+## User Management Testing
+- [ ] Profile CRUD operations
+- [ ] Address management
+- [ ] Wishlist functionality
+- [ ] Avatar upload/delete
+- [ ] Password change
+- [ ] Account deactivation
+
+## Product Management Testing
+- [ ] Product CRUD operations
+- [ ] Product search and filtering
+- [ ] Product reviews
+- [ ] Image upload/delete
+- [ ] Stock management
+- [ ] Analytics access
+- [ ] Related products
+
+## Category Management Testing
+- [ ] Category CRUD operations
+- [ ] Category tree structure
+- [ ] Category products listing
+- [ ] Image management
+- [ ] Category reordering
+
+## Cart Management Testing
+- [ ] Add/remove items
+- [ ] Update quantities
+- [ ] Cart validation
+- [ ] Coupon application
+- [ ] Move to wishlist
+- [ ] Save for later
+
+## Order Management Testing
+- [ ] Order creation
+- [ ] Order tracking
+- [ ] Status updates
+- [ ] Cancellation
+- [ ] Refund requests
+- [ ] Rating/reviews
+- [ ] Reordering
+
+## Coupon Management Testing
+- [ ] Coupon validation
+- [ ] Coupon application
+- [ ] Coupon CRUD (Admin)
+- [ ] Usage tracking
+- [ ] Expiration handling
+
+## Review Management Testing
+- [ ] Review creation
+- [ ] Review moderation
+- [ ] Review replies
+- [ ] Review flagging
+- [ ] Image uploads
+- [ ] Helpful voting
+
+## Support System Testing
+- [ ] Ticket creation
+- [ ] Message threading
+- [ ] File attachments
+- [ ] Ticket resolution
+- [ ] Rating system
+- [ ] Admin management
+
+## Notification System Testing
+- [ ] Notification creation
+- [ ] Bulk notifications
+- [ ] Read/unread status
+- [ ] Preferences management
+- [ ] Real-time delivery
+
+## Wishlist Testing
+- [ ] Add/remove items
+- [ ] Wishlist sharing
+- [ ] Move to cart
+- [ ] Public/private settings
+
+## Analytics Testing
+- [ ] Sales analytics
+- [ ] Product analytics
+- [ ] User analytics
+- [ ] Revenue analytics
+- [ ] Export functionality
+
+## Admin Testing
+- [ ] Dashboard access
+- [ ] User management
+- [ ] Product management
+- [ ] Order management
+- [ ] Analytics access
+- [ ] System monitoring
+- [ ] Bulk operations
+
+## Security Testing
+- [ ] Authentication bypass attempts
+- [ ] Authorization checks
+- [ ] Input validation
+- [ ] XSS prevention
+- [ ] SQL injection prevention
+- [ ] Rate limiting
+- [ ] File upload security
+
+## Performance Testing
+- [ ] Response time benchmarks
+- [ ] Load testing
+- [ ] Cache performance
+- [ ] Database performance
+- [ ] Memory usage
+- [ ] Concurrent operations
+
+## Error Handling Testing
+- [ ] 400 Bad Request scenarios
+- [ ] 401 Unauthorized scenarios
+- [ ] 403 Forbidden scenarios
+- [ ] 404 Not Found scenarios
+- [ ] 500 Internal Server Error scenarios
+- [ ] Validation error messages
+
+## Real-time Testing
+- [ ] Socket.io connections
+- [ ] Order status updates
+- [ ] Support chat
+- [ ] Inventory alerts
+- [ ] Notification delivery
+
+## File Upload Testing
+- [ ] Image uploads
+- [ ] File type validation
+- [ ] File size limits
+- [ ] Multiple file uploads
+- [ ] File deletion
+
+===============================================================================
+🚀 QUICK START GUIDE
+===============================================================================
+
+## 1. Import Postman Collection
+1. Open Postman
+2. Click "Import"
+3. Create new collection "E-commerce API Complete"
+4. Copy and paste the requests above
+
+## 2. Set Up Environment
+1. Create new environment "E-commerce Local"
+2. Add variables listed in section 1
+3. Set baseUrl to http://localhost:3000
+
+## 3. Start Testing
+1. Run "Register User" to create account
+2. Run "Login User" to get access token
+3. Test other endpoints in order
+4. Use the workflows in section 18
+
+## 4. Automated Testing
+1. Set up collection runner
+2. Configure data files for bulk testing
+3. Set up monitoring for continuous testing
+4. Generate reports
+
+## 5. Load Testing
+1. Use Newman for command-line testing
+2. Set up concurrent user simulations
+3. Monitor performance metrics
+4. Analyze bottlenecks
+
+===============================================================================
+📝 NOTES
+===============================================================================
+
+- Replace {{variableName}} with actual values or set up Postman variables
+- Some endpoints require admin privileges - use admin credentials
+- File upload endpoints need actual files
+- Socket.io testing requires WebSocket client
+- Rate limiting may affect rapid testing
+- Always test error scenarios
+- Monitor application logs during testing
+- Use different user accounts for comprehensive testing
+- Test with various data sizes and edge cases
+- Verify database state after operations
+- Test real-time features with multiple clients
+- Validate all business rules and constraints
+- Check email notifications in development
+- Test mobile responsiveness if applicable
+- Verify security headers and HTTPS in production
+
+===============================================================================
+🎉 HAPPY TESTING!
+===============================================================================
+
+This comprehensive guide covers all aspects of the complete e-commerce platform API.
+Use it to ensure your application works correctly under all conditions and scenarios.
+
+For issues or questions, check the application logs and error responses.
+Remember to test both success and failure scenarios for complete coverage.
+
+The platform now includes:
+- Complete authentication system
+- User management with profiles and addresses
+- Product catalog with reviews and ratings
+- Shopping cart and order management
+- Coupon and discount system
+- Customer support ticketing
+- Notification system
+- Wishlist functionality
+- Comprehensive analytics
+- Admin management tools
+- Real-time features
+- File upload capabilities
+- Security measures
+- Performance optimizations
+
+Test thoroughly and ensure all features work as expected!
